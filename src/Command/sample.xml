@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<us:SyncPartyMaster xmlns:oa="http://www.openapplications.org/oagis/9" xmlns:us="http://www.ussco.com/oagis/0" releaseID="9.0" systemEnvironmentCode="PRD" languageCode="en-US">
+    <oa:ApplicationArea xmlns:oa="http://www.openapplications.org/oagis/9">
+        <oa:Sender>
+            <oa:LogicalID>ch2lpcsyn415</oa:LogicalID>
+            <oa:ComponentID>ICAPS_SYNDICATION</oa:ComponentID>
+            <oa:TaskID>SyncPartyMaster.xml</oa:TaskID>
+            <oa:ReferenceID>9.0</oa:ReferenceID>
+        </oa:Sender>
+        <oa:CreationDateTime>2022-12-08T01:33:03:201</oa:CreationDateTime>
+    </oa:ApplicationArea>
+    <us:DataArea>
+        <oa:Sync/>
+        <us:PartyMaster>
+            <oa:PartyIDs>
+                <oa:ID>3313</oa:ID>
+            </oa:PartyIDs>
+            <oa:Name>1908 BRANDS</oa:Name>
+            <us:ChildParty>
+                <oa:PartyIDs>
+                    <oa:ID>6201</oa:ID>
+                </oa:PartyIDs>
+                <oa:Name>Boulder Clean</oa:Name>
+                <oa:Attachment>
+                    <oa:FileName>BOULDERCLEAN_LOGO.JPG</oa:FileName>
+                </oa:Attachment>
+            </us:ChildParty>
+            <oa:PartnerRoleCodes>
+                    <oa:Code name="Pricer_Published_Vendor_Name">1908 BRANDS</oa:Code>
+            </oa:PartnerRoleCodes>
+            <us:VendorShortName>BOULDR    </us:VendorShortName>
+            <us:VendorAbbreviation>BCL</us:VendorAbbreviation>
+        </us:PartyMaster>
+        <us:PartyMaster>
+            <oa:PartyIDs>
+                <oa:ID>1321</oa:ID>
+            </oa:PartyIDs>
+            <oa:Name>2XL CORPORATION, INC.</oa:Name>
+            <us:ChildParty>
+                <oa:PartyIDs>
+                    <oa:ID>2851</oa:ID>
+                </oa:PartyIDs>
+                <oa:Name>2XL</oa:Name>
+                <oa:Attachment>
+                    <oa:FileName>2XL_LOGO.JPG</oa:FileName>
+                </oa:Attachment>
+            </us:ChildParty>
+            <oa:PartnerRoleCodes>
+                    <oa:Code name="Minority_Owner_Indicator">N</oa:Code>
+                    <oa:Code name="Minority_Owner_Code">N</oa:Code>
+                    <oa:Code name="Pricer_Published_Vendor_Name">2XL CORPORATION, INC.</oa:Code>
+            </oa:PartnerRoleCodes>
+            <us:VendorShortName>TWOXL     </us:VendorShortName>
+            <us:VendorAbbreviation>TXL</us:VendorAbbreviation>
+        </us:PartyMaster>
+        <us:PartyMaster>
+            <oa:PartyIDs>
+                <oa:ID>3048</oa:ID>
+            </oa:PartyIDs>
+            <oa:Name>360 ELECTRICAL</oa:Name>
+            <us:ChildParty>
+                <oa:PartyIDs>
+                    <oa:ID>5838</oa:ID>
+                </oa:PartyIDs>
+                <oa:Name>360 Electrical</oa:Name>
+                <oa:Attachment>
+                    <oa:FileName>360ELECTRICAL_LOGO.JPG</oa:FileName>
+                </oa:Attachment>
+            </us:ChildParty>
+            <oa:PartnerRoleCodes>
+                    <oa:Code name="Pricer_Published_Vendor_Name">360 ELECTRICAL</oa:Code>
+            </oa:PartnerRoleCodes>
+            <us:VendorShortName>360ELE    </us:VendorShortName>
+            <us:VendorAbbreviation>TSZ</us:VendorAbbreviation>
+        </us:PartyMaster>
+
+    </us:DataArea>
+</us:SyncPartyMaster>  

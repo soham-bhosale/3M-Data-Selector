@@ -40,6 +40,8 @@ class GetBrandName extends Command{
         $io->progressStart(100);
         $iter_count = 0;
         $prog = 0;
+        $outputFile = fopen(__DIR__ . "../../../output/b.csv", 'a');
+        fputcsv($outputFile, ['SKU', 'BrandID', 'BrandName']);
         while ($file = readdir($dir)) {
             
 
@@ -54,7 +56,6 @@ class GetBrandName extends Command{
             $crawler = $this->setCrawler(new Crawler(), $file);
             
 
-            $outputFile = fopen(__DIR__ . "../../../output/b.csv", 'a');
             $crawler->each(function (Crawler $node) use($outputFile, $sku, $brandData) {
                 $brandID = $node->filterXPath('//us:BrandId')->innerText();
                 

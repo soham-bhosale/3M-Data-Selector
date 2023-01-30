@@ -22,7 +22,7 @@ class GetBrandName extends Command{
     public function configure(){
 
         $this->setDescription('Get brand names from xml file')
-             ->addArgument('exportPath', InputArgument::OPTIONAL, 'XML File');
+             ->addArgument('exportFileName', InputArgument::REQUIRED, 'XML File');
 
     }
 
@@ -30,17 +30,19 @@ class GetBrandName extends Command{
     {
         echo "Started---\n";
         $io = new SymfonyStyle($input, $output);
+        $outputFileName = $input->getArgument('exportFileName');
         
         $brandData = $this->getSMBrandDetails();
         
         
-        $dir = opendir("resources/individual_files");
         $f = new \FilesystemIterator("resources/individual_files");
         $f_count = iterator_count($f);
         $io->progressStart(100);
         $iter_count = 0;
-        $prog = 0;
-        $outputFile = fopen(__DIR__ . "../../../output/b.csv", 'a');
+        
+        
+        $dir = opendir("resources/individual_files");
+        $outputFile = fopen(__DIR__ . "../../../output/".$outputFileName, 'a');
         fputcsv($outputFile, ['SKU', 'BrandID', 'BrandName']);
         while ($file = readdir($dir)) {
             
@@ -50,13 +52,11 @@ class GetBrandName extends Command{
             }
 
 
-            $sku = substr($file,0,-4);
-
 
             $crawler = $this->setCrawler(new Crawler(), $file);
             
 
-            $crawler->each(function (Crawler $node) use($outputFile, $sku, $brandData) {
+            $crawler->each(function (Crawler $node) use($outputFile, $brandData) {
                 $brandID = $node->filterXPath('//us:BrandId')->innerText();
                 
                 $sku = $this->getSku($node);
@@ -111,9 +111,11 @@ class GetBrandName extends Command{
         $manufac_sku_num = "";
         $node->filterXPath('//oa:ItemID')->each(function (Crawler $node) use(&$prefix, &$manufac_sku_num) {
             if($node->attr('agencyRole')=="Prefix_Number"){
-                $prefix = $node->text();
-            }else if($node->attr('agencyRole')=="Manufacturer_Sku_Number"){
-                $manufac_sku_num = $node->text();
+                $prefix = $node->extract(['_text']);
+                $prefix = trim($prefix[0]);
+            }else if($node->attr('agencyRole')=="Stock_Number_Butted"){
+                $manufac_sku_num = $node->extract(['_text']);
+                $manufac_sku_num = trim($manufac_sku_num[0]);
             }
         });
 

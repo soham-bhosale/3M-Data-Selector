@@ -125,7 +125,7 @@ class GetValidSchema extends Command
 
     public function getInvalidValues($invalidators){
         $inVal = array();
-        $inVal[] = "cxzf";
+        $inVal[] = "$-$-$-$-$-$-$-$-$";
         $inVal[] = '';
         while($elem = fgetcsv($invalidators)){
             $inVal[] = $elem[0];

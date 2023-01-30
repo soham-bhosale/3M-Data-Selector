@@ -42,10 +42,11 @@ class GetCSVAttributes extends Command
         fputcsv($outputFile, $this->setHeaders($attrFilePath));
 
         $attrIndexArr = $this->getAttributeArray($file, $attrFile);
+        $invalidArr = $this->getInvalidValues();
 
         while($row = fgetcsv($file)){
 
-            $opRow = $this->getSpecifiedValuesByIndex($row, $attrIndexArr);
+            $opRow = $this->getSpecifiedValuesByIndex($row, $attrIndexArr, $invalidArr);
 
             fputcsv($outputFile, $opRow);
         }
@@ -74,17 +75,23 @@ class GetCSVAttributes extends Command
         return $attrIndex;
     }
 
-    public function getSpecifiedValuesByIndex($row, $attrIndexArr){
+    public function getSpecifiedValuesByIndex($row, $attrIndexArr, $invalidArr){
 
         $opRow = array();
 
         foreach($attrIndexArr as $index){
             if($index>-1){
-                $opRow[] = $row[$index];
+                $val = $row[$index];
+                if(array_search($val, $invalidArr)){
+                    $val = "";
+                }
+                $opRow[] = $val;
                 
             }else{
                 $opRow[] = "";
             }
+
+
         }
 
         return $opRow;
@@ -99,6 +106,18 @@ class GetCSVAttributes extends Command
         }
 
         return $labels;
+    }
+
+    public function getInvalidValues(){
+        $invalidators = fopen('resources/3M/SchemaValidation/invalidValues.csv', 'r');
+        $inVal = array();
+        $inVal[] = "$-$-$-$-$-$-$-$-$";
+        $inVal[] = '';
+        while($elem = fgetcsv($invalidators)){
+            $inVal[] = $elem[0];
+        }
+
+        return $inVal;
     }
 }
 

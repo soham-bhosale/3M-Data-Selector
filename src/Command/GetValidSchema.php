@@ -111,7 +111,7 @@ class GetValidSchema extends Command
             
             $element = $row[$index];
 
-            echo $index . "---".$element."---".array_search($element, $invalidArr)."\n";
+            // echo $index . "---".$element."---".array_search($element, $invalidArr)."\n";
             if(array_search($element, $invalidArr)){
                 $isValid = false;
             }else{
@@ -154,10 +154,6 @@ class GetValidSchema extends Command
         return $labels;
     }
 
-    public function camelCaseToSnakeCase($string)
-    {
-        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $string));
-    }
 
     public function getCodeArr($lookupFilePath){
         $lookupFile = fopen($lookupFilePath, 'r');

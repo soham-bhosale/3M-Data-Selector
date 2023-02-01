@@ -79,7 +79,7 @@ class GenXlsxAttributeJson extends Command
             }
             $json .= ",\"labels\":{\"en_US\":\"".$attr."\"}}\n";
 
-            echo $json."\n\n";
+            echo "Generated json for ".$attr."\n";
 
             fwrite($outputFile, $json);
         }
@@ -121,11 +121,14 @@ class GenXlsxAttributeJson extends Command
 
     public function genJsonType($attr, $lookupArr, $input, $output, &$addToLookUp){
         $lookupCols = array_keys($lookupArr);
+        $io = new SymfonyStyle($input, $output);
         $pimtype = "";
         if($index = array_search($attr, $lookupCols)){
             $pimtype = $lookupArr[$attr];
         }else{
-            echo "No exisiting PIM type found for column " . $attr . ". Enter manually\n";
+            echo "No exisiting PIM type found for column \n";
+            $io->caution($attr);
+            echo "Enter manually\n";
             $helper = $this->getHelper('question');
             $question = new ChoiceQuestion(
                 'Please select pim type (defaults to pim_catalog_text)',
@@ -151,7 +154,6 @@ class GenXlsxAttributeJson extends Command
         $code = preg_replace('/["]/','in',$code);  //Replaces " with in
         $code = preg_replace('/[^A-Za-z0-9\_]/','',$code);   //Removes All Characters Except Alphanumeric and Underscore
 
-        echo $code."\n";
         return $code;
     }
 

@@ -39,6 +39,8 @@ class GenXlsxAttributeJson extends Command
         $addToLookup = array();
         $lookupFile = fopen("resources/local/PIMLookup.csv", 'r');
         $outputFile = fopen($outputFilePath, 'a');
+
+        $group = "specification";
         
         $reader = ReaderEntityFactory::createXLSXReader();
         
@@ -51,24 +53,31 @@ class GenXlsxAttributeJson extends Command
         foreach($attrArr as $attr){
             $useable_as_grid_filter = false;
             $wysiwyg_enabled = false;
+            $decimals_allowed = false;
+            $negative_allowed = false;
             $pimtype = $this->genJsonType($attr, $lookupArr, $input, $output, $addToLookup);
             $code = $this->getPIMCode($attr);
 
-            if($pimtype == "pim_catalog_simpleselect" || $pimtype == "pim_catalog_multiselect"){
-                $useable_as_grid_filter = true;
-            }
             if($pimtype == "pim_catalog_textarea"){
                 $wysiwyg_enabled = true;
             }
+            if($pimtype == "pim_catalog_number"){
+                $decimals_allowed = true;
+                $negative_allowed = true;
+            }
 
-            $json = "{\"code\":\"" . $code . "\",\"type\":\"" . $pimtype."\"";
-            if($useable_as_grid_filter){
-                $json .= ",\"useable_as_grid_filter\":\"" . "true"."\"";
-            }
+            $json = "{\"code\":\"" . $code . "\",\"type\":\"" . $pimtype."\"".",\"group\":\"".$group."\"";
+            $json .= ",\"useable_as_grid_filter\":" . "true";
             if($wysiwyg_enabled){
-                $json .= ",\"wysiwyg_enabled\":\"" . "true"."\"";
+                $json .= ",\"wysiwyg_enabled\":" . "true";
             }
-            $json .= "}\n";
+            if($decimals_allowed){
+                $json .= ",\"decimals_allowed\":" . "false";
+            }
+            if($negative_allowed){
+                $json .= ",\"negative_allowed\":" . "false";
+            }
+            $json .= ",\"labels\":{\"en_US\":\"".$attr."\"}}\n";
 
             echo $json."\n\n";
 
@@ -120,7 +129,9 @@ class GenXlsxAttributeJson extends Command
             $helper = $this->getHelper('question');
             $question = new ChoiceQuestion(
                 'Please select pim type (defaults to pim_catalog_text)',
-                ['pim_catalog_text', 'pim_catalog_textarea', 'pim_catalog_simpleselect','pim_catalog_multiselect','pim_catalog_date','pim_catalog_image'],
+                ['pim_catalog_text', 'pim_catalog_textarea', 'pim_catalog_simpleselect',
+                 'pim_catalog_multiselect','pim_catalog_date','pim_catalog_image','pim_catalog_number',
+                 'pim_catalog_file','pim_catalog_boolean'],
                 0
             );
             $question->setErrorMessage('PIM type %s is invalid.');
@@ -133,8 +144,14 @@ class GenXlsxAttributeJson extends Command
     }
 
     public function getPIMCode($attr){
-        $code = strtolower($attr);
-        $code = str_replace(" ","_",$code);
+        $code = strtolower($attr);                  // to lowercase
+        $code = str_replace(" ", "_", $code);      //Replaces Spaces With Underscore
+        $code = preg_replace('/[.]/','_',$code);  //Replaces . With Underscore
+        $code = preg_replace('/[\/]/','_',$code);  //Replaces Forward Slash with Underscore
+        $code = preg_replace('/["]/','in',$code);  //Replaces " with in
+        $code = preg_replace('/[^A-Za-z0-9\_]/','',$code);   //Removes All Characters Except Alphanumeric and Underscore
+
+        echo $code."\n";
         return $code;
     }
 

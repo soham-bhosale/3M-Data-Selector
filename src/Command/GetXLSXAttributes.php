@@ -45,7 +45,6 @@ class GetXLSXAttributes extends Command
         $reader->open($inputFilePath);
         
         $attrIndexArr = $this->getAttributeArray($reader, $attrFile);
-        fclose($attrFile);
         $invalidArr = $this->getInvalidValues();
 
         $this->getSpecifiedValuesByIndex($reader, $outputFilePath, $attrIndexArr, $invalidArr);
@@ -84,11 +83,14 @@ class GetXLSXAttributes extends Command
         while (!feof($attrFile)) {
             if ($row = fgetcsv($attrFile)) {
                 $attrLabel = $row[1];
-                $index = array_search($attrLabel, $attrs);
-                if (!($index == "") || $index==0) {
+                if ($index = array_search($attrLabel, $attrs)) {
                     $attrIndex[] = $index;
                 }else{
-                    $attrIndex[] = -1;
+                    if($attrs[0]===$attrLabel){
+                        $attrIndex[] = $index;
+                    }else{
+                        $attrIndex[] = $attrLabel;
+                    }
                 }
             }
         }
@@ -115,6 +117,7 @@ class GetXLSXAttributes extends Command
         $writer->openToFile($outputFilePath);
         foreach ($reader->getSheetIterator() as $sheet) {
             $i = 0;
+            $c = 1;
             foreach ($sheet->getRowIterator() as $row) {
                 $cells = $row->getCells();
                 $opRow = array();
@@ -123,23 +126,30 @@ class GetXLSXAttributes extends Command
                     continue;
                 }
                 foreach($attrIndexArr as $index){
-                    if($index>-1){
-                        $val = $cells[$index]->getValue();
-                        
-                        if(array_search($val, $invalidArr)){
-                            $val = '';
+                    if(gettype($index)=="string"){
+                        if($c<2){
+                            // echo $index . "\n";
+                            $opRow[] = $index;
+                        }else{
+                            $opRow[] = "";
                         }
-                        $opRow[] = $val;
-                        
                     }else{
-                        $opRow[] ='';
+                            $val = $cells[$index]->getValue();
+                            
+                            if(array_search($val, $invalidArr)){
+                                $val = '';
+                            }
+                            $opRow[] = $val;
+                            
+                        }
+                        
                     }
-
-                }
-
+                    
+                    // print_r($opRow);
+                    $singleRow = WriterEntityFactory::createRowFromArray($opRow);
+                    $writer->addRow($singleRow);
+                    $c += 1;
                 
-                $singleRow = WriterEntityFactory::createRowFromArray($opRow);
-                $writer->addRow($singleRow);
             }
             break;
         }

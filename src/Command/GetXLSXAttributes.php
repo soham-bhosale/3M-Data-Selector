@@ -25,7 +25,7 @@ class GetXLSXAttributes extends Command
     public function configure()
     {
 
-        $this->setDescription('Get brand names from xml file')
+        $this->setDescription('Get xlsx file with valid columns')
             ->addArgument('inputFile', InputArgument::REQUIRED, 'Data XLSX File')
             ->addArgument('lookupFile', InputArgument::REQUIRED, 'Attribute names CSV File')
             ->addArgument('outputFile', InputArgument::REQUIRED, 'Output File(XLSX) Path');
@@ -37,6 +37,9 @@ class GetXLSXAttributes extends Command
         $inputFilePath = $input->getArgument('inputFile');
         $attrFilePath = $input->getArgument('lookupFile');
         $outputFilePath = $input->getArgument('outputFile');
+
+        $file = fopen($outputFilePath, 'a');
+        fclose($file);
 
         $attrFile = fopen($attrFilePath, 'r');
 
@@ -147,6 +150,7 @@ class GetXLSXAttributes extends Command
                     
                     // print_r($opRow);
                     $singleRow = WriterEntityFactory::createRowFromArray($opRow);
+                    echo "Added row-->".$c."\n";
                     $writer->addRow($singleRow);
                     $c += 1;
                 
@@ -155,7 +159,7 @@ class GetXLSXAttributes extends Command
         }
         
         $writer->close();
-        exit;
+        // exit;
 
     }
 }

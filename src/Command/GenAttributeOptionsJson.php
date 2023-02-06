@@ -2,8 +2,10 @@
 
 namespace App\Command;
 
+use Akeneo\Pim\ApiClient\AkeneoPimClientBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 use Box\Spout\Writer\Common\Creator\WriterEntityFactory;
@@ -26,9 +28,10 @@ class GenAttributeOptionsJson extends Command
     public function configure()
     {
 
-        $this->setDescription('Get brand names from xml file')
+        $this->setDescription('Generate attribute options json and push to akeneo pim api')
             ->addArgument('inputFile', InputArgument::REQUIRED, 'Data XLSX File')
-            ->addArgument('outputFile', InputArgument::REQUIRED, 'Output File(JSON) Path');
+            ->addArgument('outputFile', InputArgument::REQUIRED, 'Output File(JSON) Path')
+            ->addOption('push', null, InputOption::VALUE_OPTIONAL, 'Push attribute options to akeneo api');
 
     }
 
@@ -50,11 +53,21 @@ class GenAttributeOptionsJson extends Command
         $optionsAttrs = $this->getOptionsAttrs($attrArr, $lookupArr);
 
         foreach($optionsAttrs as $attr){
+            $optionsApiArr = array();
             $options = $this->getUniqueOptions($attr, $reader, $attrArr);
             $attribute = $this->getPIMCode($attr);
+            $optionsApiArr[0] = $attribute;
             foreach($options as $option){
-                $code = $this->getPIMCode($option);
-                $json = "{\"code\":\"" . $code."\"".",\"attribute\":\"".$attribute."\"".",\"labels\":{\"en_US\":\"".$option."\"}}\n";
+                $fracLabel = $this->getFracLabel($option);
+                $code = $this->getPIMCode($fracLabel);
+                $optionsApiArr[1] = $code;
+                $json = "{\"code\":\"" . $code."\"".",\"attribute\":\"".$attribute."\"".",\"labels\":{\"en_US\":\"".addslashes($fracLabel)."\"}}\n";
+                $optionsApiArr[2]["labels"] = ["en_US" => $fracLabel];
+                if($optionsApiArr[1]!=""){
+                    if($input->getOption('push')==1){
+                        $this->pushToOptionsApi($optionsApiArr);
+                    }
+                }
                 fwrite($outputFile, $json);
             }
 
@@ -130,13 +143,103 @@ class GenAttributeOptionsJson extends Command
         return $unique;
     }
     public function getPIMCode($attr){
-        $code = strtolower($attr);                  // to lowercase
+        $code = strtolower(trim($attr));                  // to lowercase
         $code = str_replace(" ", "_", $code);      //Replaces Spaces With Underscore
         $code = preg_replace('/[.]/','_',$code);  //Replaces . With Underscore
         $code = preg_replace('/[\/]/','_',$code);  //Replaces Forward Slash with Underscore
         $code = preg_replace('/["]/','in',$code);  //Replaces " with in
+        if($num = preg_match('/\d+\++$/', $code, $match)){ //replaces number ending with + to num plus
+            $code = str_replace('+', '_plus',$code);
+            echo $code."\n";
+            return $code;
+        }
         $code = preg_replace('/[^A-Za-z0-9\_]/','',$code);   //Removes All Characters Except Alphanumeric and Underscore
-
+        $code = preg_replace('/_+/', '_', $code);
         return $code;
     }
+
+    public function pushToOptionsApi($optionsApiArr){
+        $clientBuilder = new AkeneoPimClientBuilder('http://dev-cicero-pim.humcommerce.com/');
+        $client = $clientBuilder->buildAuthenticatedByPassword('3_49vm8m4u1eassko8kgsc4kk8w8ww0kgcwwsoos0g400048csgw', '1p6muqkbd8jocg80o0o8g4s48gcwkkgc08cwg80848o0wswkw8', '3mattributes_9120', 'd1396acd9');
+
+        try{
+            $client->getAttributeOptionApi()->create($optionsApiArr[0],$optionsApiArr[1], $optionsApiArr[2]);
+            echo "Pushed options to api\n";
+        }catch(\Exception $e){
+            print_r($e->getMessage());
+            echo "Option already exists.\n";
+        }
+    }
+
+    public function getFracLabel($label){
+
+        if($n = preg_match('/(\sin)$/',$label, $mat)){
+            $nLabel = str_replace($mat[0],"\"", $label);
+            echo $nLabel."      ";
+            $label = $nLabel;
+        }
+        
+        if($num = preg_match('/\d+\.\d+/', $label, $match)){
+            $nLabel = self::float2fraction((float)$match[0]).substr($label,strpos($label, $match[0])+strlen($match[0]));
+            echo $nLabel."\n";
+            return $nLabel;
+        }
+        
+        return $label;
+    }
+
+    public function float2rat($n, $tolerance = 1.e-10) {
+        $h1=1; $h2=0;
+        $k1=0; $k2=1;
+        $b = 1/$n;
+        do {
+            $b = 1/$b;
+            $a = floor($b);
+            $aux = $h1; $h1 = $a*$h1+$h2; $h2 = $aux;
+            $aux = $k1; $k1 = $a*$k1+$k2; $k2 = $aux;
+            $b = $b-$a;
+        } while (abs($n-$h1/$k1) > $n*$tolerance);
+      
+        return "$h1/$k1";
+      }
+      
+    public function float2fraction($float, $concat = ' '){
+        
+        // ensures that the number is float, 
+        // even when the parameter is a string
+        $float = (float)$float;
+      
+        if($float == 0 ){
+          return $float;
+        }
+        
+        // when float between -1 and 1
+        if( $float > -1 && $float < 0  || $float < 1 && $float > 0 ){
+          $fraction = self::float2rat($float);
+          return $fraction;
+        }
+        else{
+      
+          // get the minor integer
+          if( $float < 0 ){
+            $integer = ceil($float);
+          }
+          else{
+            $integer = floor($float);
+          }
+      
+          // get the decimal
+          $decimal = $float - $integer;
+      
+          if( $decimal != 0 ){
+      
+            $fraction = self::float2rat(abs($decimal));
+            $fraction = $integer . $concat . $fraction;
+            return $fraction;
+          }
+          else{
+            return $float;
+          }
+        }
+      }
 }

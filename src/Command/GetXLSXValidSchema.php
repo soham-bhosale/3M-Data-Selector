@@ -24,10 +24,10 @@ class GetXLSXValidSchema extends Command
 
     public function configure()
     {
-        $this->setDescription('Get brand names from xml file')
+        $this->setDescription('Validate given attributes on xlsx file')
             ->addArgument('lookupFile', InputArgument::REQUIRED, 'LookUp CSV File')
             ->addArgument('dataFile', InputArgument::REQUIRED, "Data XLSX file")
-            ->addArgument('outputFileName', InputArgument::OPTIONAL, 'Output File(CSV) Path');
+            ->addArgument('outputFileName', InputArgument::REQUIRED, 'Output File(CSV) Path');
 
     }
 
@@ -47,18 +47,14 @@ class GetXLSXValidSchema extends Command
 
         $lookupFile = fopen($lookupFilePath, 'r');
         $attrIndexArr = $this->getAttributeArray($reader, $lookupFile);
+        // print_r($attrIndexArr);
         $inValArr = $this->getInvalidValues();
 
         $validAttrs = array();
         $invalidAttrs = array();
 
-        foreach($attrIndexArr as $index){
-            if($this->validator($reader, $index, $inValArr)){
-                $validAttrs[] = $index;
-            }else{
-                $invalidAttrs[] = $index;
-            }
-        }
+
+        $this->validator($reader, $attrIndexArr, $inValArr, $validAttrs, $invalidAttrs);
 
         $validAttributesArr = $this->getLookUpArray($reader, $validAttrs, $lookupFilePath);
         $invalidAttributesArr = $this->getLookUpArray($reader, $invalidAttrs, $lookupFilePath);
@@ -117,31 +113,56 @@ class GetXLSXValidSchema extends Command
         return $attrIndex;
     }
 
-    public function validator($reader, $index, $invalidArr){
+    public function validator($reader, $attrIndexArr, $invalidArr, &$validAttrs, &$invalidAttrs){
         $isValid = false;
+        $arrayToCheck = $attrIndexArr;
 
         foreach ($reader->getSheetIterator() as $sheet) {
             $i = 0;
+            $c = 0;
             foreach ($sheet->getRowIterator() as $row) {
                 $cells = $row->getCells();
                 if($i<2){
                     $i += 1;
                     continue;
                 }
-                if(gettype($index)=="string"){
-                    return true;
+                foreach($arrayToCheck as $index){
+                    if(gettype($index)=="string" ){
+                        if (in_array($index, $validAttrs)) {
+                            $validAttrs[] = $index;
+                            $arrayToCheck = array_diff($arrayToCheck, [$index]);
+                            $validAttrs = array_unique($validAttrs);
+                        }
+                        continue;
+                    }
+                    $element = $cells[$index]->getValue();
+                    echo $c."------".$index . "---".$element."---".array_search($element, $invalidArr)."\n";
+                    $c += 1;
+                    if(array_search($element, $invalidArr)){
+                        $isValid = false;
+                    }else{
+                        $isValid = true;
+                        if(!in_array($index, $validAttrs)){
+                            $validAttrs[] = $index;
+                            $arrayToCheck = array_diff($arrayToCheck, [$index]);
+                            if(count($arrayToCheck)<=0){
+                                echo "No element to check";
+                                break;
+                            }
+                            $validAttrs = array_unique($validAttrs);
+                        }
+                        continue;
+                    }
                 }
-                // echo $index . "---".$element."---".array_search($element, $invalidArr)."\n";
-                $element = $cells[$index]->getValue();
-                if(array_search($element, $invalidArr)){
-                    $isValid = false;
-                }else{
-                    $isValid = true;
+                if(count($arrayToCheck)<=0){
+                    echo "No element to check";
                     break;
                 }
             }
             break;
         }
+
+        print_r($validAttrs);
         return $isValid;
     }
 
@@ -170,7 +191,6 @@ class GetXLSXValidSchema extends Command
 
     public function getLookUpArray($reader, $valArr, $lookupFilePath){
         $lookupArr = $this->getCodeArr($lookupFilePath);
-
         foreach ($reader->getSheetIterator() as $sheet) {
             $rowN = 1;
             foreach ($sheet->getRowIterator() as $row) {
@@ -203,7 +223,6 @@ class GetXLSXValidSchema extends Command
                 $labels[$code] = $attrLabels[$val];
             }
         }
-
         return $labels;
     }
 }

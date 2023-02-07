@@ -33,6 +33,7 @@ class GenXlsxAttributeJson extends Command
         $this->setDescription('Generate attrobute json and push to akeneo pim api')
             ->addArgument('inputFile', InputArgument::REQUIRED, 'Data XLSX File')
             ->addArgument('outputFile', InputArgument::REQUIRED, 'Output File(JSON) Path')
+            ->addArgument('familyName',InputArgument::OPTIONAL, 'Family Name')
             ->addOption('attrPush','a', InputOption::VALUE_OPTIONAL, 'Pushes attribute to akeneo api',0)
             ->addOption('famPush','f',InputOption::VALUE_OPTIONAL, "Pushes family to akeneo api",0);
 
@@ -184,7 +185,7 @@ class GenXlsxAttributeJson extends Command
     }
 
     public function addNewPimTypesToLookUp($addToLookup){
-        $lookupFile = fopen("resources/local/PIMLookup.csv", 'a');
+        $lookupFile = fopen("/home/soham/Parser/xml_parser/resources/local/PIMLookup.csv", 'a');
 
         foreach($addToLookup as $attr=>$pimtype){
             fputcsv($lookupFile, [$attr, $pimtype]);
@@ -199,20 +200,26 @@ class GenXlsxAttributeJson extends Command
         $familyName = explode("/",$inputFilePath);
         $familyLabel = explode(".",$familyName[count($familyName) - 1])[0];
         $familyName = $this->getPIMCode($familyLabel);
-        $io->note("Setting family name as input file name:- ".$familyName."\nAnd family label as:- ".$familyLabel);
-        $helper = $this->getHelper('question');
-        $question = new ChoiceQuestion(
-            'Continue with this name?',
-            ['Yes','No'],
-            0
-        );
-        $question->setErrorMessage('PIM type %s is invalid.');
-        $ans = $helper->ask($input, $output, $question);
-        if ($ans == "No") {
-            $question = new Question('Please enter the label name of the family (Default is \"'.$familyLabel."\" )\n -->", $familyLabel);
-            $familyLabel = $helper->ask($input, $output, $question);
-            $familyName = $this->getPIMCode($familyLabel);
-            
+        $inpFamilyName = $input->getArgument('familyName');
+        if(isset($inpFamilyName)){
+            $familyLabel = $inpFamilyName;
+            $familyName = $this->getPIMCode($inpFamilyName);
+        }else{
+            $io->note("Setting family name as input file name:- ".$familyName."\nAnd family label as:- ".$familyLabel);
+            $helper = $this->getHelper('question');
+            $question = new ChoiceQuestion(
+                'Continue with this name?',
+                ['Yes','No'],
+                0
+            );
+            $question->setErrorMessage('PIM type %s is invalid.');
+            $ans = $helper->ask($input, $output, $question);
+            if ($ans == "No") {
+                $question = new Question('Please enter the label name of the family (Default is \"'.$familyLabel."\" )\n -->", $familyLabel);
+                $familyLabel = $helper->ask($input, $output, $question);
+                $familyName = $this->getPIMCode($familyLabel);
+                
+            }
         }
 
         echo "\nSetting family label is --> " . $familyLabel;

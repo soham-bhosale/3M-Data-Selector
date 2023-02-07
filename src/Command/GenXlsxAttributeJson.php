@@ -43,7 +43,7 @@ class GenXlsxAttributeJson extends Command
         $inputFilePath = $input->getArgument('inputFile');
         $outputFilePath = $input->getArgument('outputFile');
         $addToLookup = array();
-        $lookupFile = fopen("resources/local/PIMLookup.csv", 'r');
+        $lookupFile = fopen("/home/soham/Parser/xml_parser/resources/local/PIMLookup.csv", 'r');
         $outputFile = fopen($outputFilePath, 'a');
 
         $group = "specification";

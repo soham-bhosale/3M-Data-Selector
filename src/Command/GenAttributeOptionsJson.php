@@ -148,7 +148,7 @@ class GenAttributeOptionsJson extends Command
         $code = preg_replace('/[.]/','_',$code);  //Replaces . With Underscore
         $code = preg_replace('/[\/]/','_',$code);  //Replaces Forward Slash with Underscore
         $code = preg_replace('/["]/','in',$code);  //Replaces " with in
-        if($num = preg_match('/\d+\++$/', $code, $match)){ //replaces number ending with + to num plus
+        if($num = preg_match('/.+\++$/', $code, $match)){ //replaces number ending with + to num plus
             $code = str_replace('+', '_plus',$code);
             echo $code."\n";
             return $code;
